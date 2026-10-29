@@ -9,3 +9,4 @@ echo Press Ctrl+C in this terminal to stop the server.
 echo.
 python app.py
 pause
+

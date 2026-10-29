@@ -9,3 +9,4 @@ echo Press Ctrl+C in this terminal to stop the dashboard.
 echo.
 python -m streamlit run dashboard.py
 pause
+
