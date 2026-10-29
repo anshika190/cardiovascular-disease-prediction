@@ -130,3 +130,4 @@ with tab4:
 st.markdown("---")
 st.info("**Tip:** Use the filters in the sidebar to slice your data and personalize analyses. Switch between tabs to explore different views.")
 st.caption("Advanced Streamlit Health Checkup Dashboard | For demonstration purposes.")
+st.warning("?? **Academic & Educational Disclaimer**: This dashboard is created for academic research and college project demonstration. The insights and analyses presented are based on statistical population data and do not substitute for professional medical assessment or diagnostic screening.")

@@ -28,6 +28,14 @@ def index():
         checkup_opts=CHECKUP_OPTS
     )
 
+@app.route('/health')
+def health():
+    return jsonify({
+        'status': 'healthy',
+        'service': 'CardioSense Cardiovascular Risk Predictor API',
+        'model_loaded': model is not None
+    }), 200
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
