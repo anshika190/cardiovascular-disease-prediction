@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CardioSense — CVD Risk Predictor</title>
+<style>
+  :root {
+    --red: #e74c3c;
+    --dark-red: #c0392b;
+    --light-red: #fdecea;
+    --green: #27ae60;
+    --orange: #e67e22;
+    --yellow: #f39c12;
+    --dark: #1a1a2e;
+    --navy: #16213e;
+    --card: #0f3460;
+    --text: #ecf0f1;
+    --muted: #95a5a6;
+    --border: rgba(255,255,255,0.1);
+    --radius: 16px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, var(--dark-red) 0%, #8e1a0e 100%);
+    padding: 28px 40px;
+    display: flex; align-items: center; gap: 18px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .header-icon { font-size: 2.4rem; }
+  .header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+  .header p { font-size: 0.9rem; opacity: 0.85; margin-top: 2px; }
+  .badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.5px;
+  }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 1200px; margin: 0 auto;
+    padding: 32px 24px;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .card-title {
+    font-size: 1.05rem; font-weight: 700;
+    color: var(--red); margin-bottom: 22px;
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── SECTIONS ── */
+  .section-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin-bottom: 20px;
+  }
+  .section-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+
+  /* ── FORM ── */
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  select, input[type=number], input[type=range] {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    width: 100%;
+    transition: border-color 0.2s, background 0.2s;
+    appearance: auto;
+  }
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--red);
+    background: rgba(231,76,60,0.08);
+  }
+
+  /* Slider */
+  .slider-wrap { display: flex; flex-direction: column; gap: 6px; }
+  .slider-val {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.82rem; color: var(--muted);
+  }
+  .slider-val span { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  input[type=range] {
+    padding: 0; height: 6px; border-radius: 4px;
+    background: rgba(255,255,255,0.12); cursor: pointer;
+    border: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--red);
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(231,76,60,0.5);
+  }
+
+  /* Toggle buttons */
+  .toggle-group { display: flex; gap: 8px; }
+  .toggle-btn {
+    flex: 1; padding: 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: var(--muted); border-radius: 10px;
+    font-size: 0.88rem; cursor: pointer;
+    transition: all 0.2s; font-weight: 600;
+  }
+  .toggle-btn.active {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+  .toggle-btn:hover:not(.active) { background: rgba(231,76,60,0.15); color: var(--text); }
+
+  /* Section label */
+  .section-label {
+    font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); margin: 18px 0 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after { content: ''; flex:1; height:1px; background: var(--border); }
+
+  /* Predict button */
+  .predict-btn {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, var(--dark-red), var(--red));
+    color: #fff; border: none; border-radius: var(--radius);
+    font-size: 1.05rem; font-weight: 700; cursor: pointer;
+    margin-top: 24px;
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 16px rgba(231,76,60,0.4);
+  }
+  .predict-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .predict-btn:active { transform: translateY(0); }
+  .predict-btn.loading { opacity: 0.7; pointer-events: none; }
+
+  /* ── RESULTS PANEL ── */
+  .results-sticky { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+  .result-placeholder {
+    text-align: center; padding: 60px 20px;
+    color: var(--muted);
+  }
+  .result-placeholder .icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.5; }
+  .result-placeholder p { font-size: 0.9rem; }
+
+  /* Gauge */
+  .gauge-card { text-align: center; }
+  .gauge-wrap { position: relative; display: inline-block; margin: 16px 0 8px; }
+  .gauge-svg { transform: rotate(-90deg); }
+  .gauge-text {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .gauge-pct { font-size: 2.4rem; font-weight: 800; line-height: 1; }
+  .gauge-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+  .risk-badge {
+    display: inline-block;
+    padding: 6px 20px; border-radius: 20px;
+    font-size: 0.9rem; font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  /* Contributions */
+  .factor-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .factor-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+  .factor-item .factor-name { color: var(--text); }
+  .factor-chip {
+    padding: 3px 10px; border-radius: 10px;
+    font-size: 0.72rem; font-weight: 700;
+  }
+  .chip-risk { background: rgba(231,76,60,0.2); color: #e74c3c; }
+  .chip-protective { background: rgba(39,174,96,0.2); color: #27ae60; }
+
+  /* Advice */
+  .advice-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .advice-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: rgba(255,255,255,0.04);
+    border-left: 3px solid var(--red);
+    border-radius: 0 10px 10px 0;
+    padding: 10px 14px;
+    font-size: 0.85rem; line-height: 1.4;
+  }
+  .advice-icon { font-size: 0.9rem; margin-top: 1px; flex-shrink: 0; }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none;
+  }
+  .predict-btn.loading .spinner { display: block; }
+  .predict-btn.loading .btn-text { display: none; }
+
+  /* Pulse animation on result */
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(12px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .animate-in { animation: fadeUp 0.4s ease forwards; }
+
+  /* Footer */
+  .footer {
+    text-align: center; padding: 20px;
+    color: var(--muted); font-size: 0.78rem;
+    border-top: 1px solid var(--border);
+    margin-top: 10px;
+  }
+
+  @media (max-width: 900px) {
+    .container { grid-template-columns: 1fr; }
+    .results-sticky { position: static; }
+    .header { padding: 20px; }
+    .header h1 { font-size: 1.5rem; }
+    .badge { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-icon">❤️</div>
+  <div>
+    <h1>CardioSense</h1>
+    <p>Cardiovascular Disease Risk Prediction · Powered by Neural Network (MLP)</p>
+  </div>
+  <span class="badge">🎓 Industrial Training Project</span>
+</header>
+
+<div class="container">
+
+  <!-- ── LEFT: FORM ── -->
+  <div>
+    <div class="card">
+      <div class="card-title">🧑 Patient Profile</div>
+
+      <div class="section-grid">
+        <div class="field">
+          <label>Age Category</label>
+          <select id="age_category">
+            {% for a in age_categories %}
+            <option value="{{ a }}">{{ a }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Sex</label>
+          <div class="toggle-group">
+            <button class="toggle-btn" onclick="setToggle('sex','0',this)">Female</button>
+            <button class="toggle-btn active" onclick="setToggle('sex','1',this)">Male</button>
+          </div>
+          <input type="hidden" id="sex" value="1"/>
+        </div>
+      </div>
+
+      <div class="section-grid">
+        <div class="field">
+          <label>General Health</label>
+          <select id="general_health">
+            {% for g in general_health_opts %}
+            <option value="{{ g }}">{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label>Last Checkup</label>
+          <select id="checkup">
+            {% for c in checkup_opts %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- BMI slider -->
+      <div class="slider-wrap">
+        <label>Body Mass Index (BMI)</label>
+        <div class="slider-val">
+          <span id="bmi_val">27.0</span>
+          <small>15 – 60</small>
+        </div>
+        <input type="range" id="bmi" min="15" max="60" step="0.5" value="27"
+          oninput="document.getElementById('bmi_val').textContent=parseFloat(this.value).toFixed(1)"/>
+      </div>
+
+      <div class="section-label">Lifestyle Factors</div>
+
+      <div class="section-grid">
+        <div class="field">
+          <label>Regular Exercise</label>
+          <div class="toggle-group">
+            <button class="toggle-btn" onclick="setToggle('exercise','0',this)">No</button>
+            <button class="toggle-btn active" onclick="setToggle('exercise','1',this)">Yes</button>
+          </div>
+          <input type="hidden" id="exercise" value="1"/>
+        </div>
+        <div class="field">
+          <label>Smoking History</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="setToggle('smoking','0',this)">No</button>
+            <button class="toggle-btn" onclick="setToggle('smoking','1',this)">Yes</button>
+          </div>
+          <input type="hidden" id="smoking" value="0"/>
+        </div>
+      </div>
+
+      <!-- Diet sliders -->
+      <div class="section-grid three" style="margin-top:12px;">
+        <div class="slider-wrap">
+          <label>Fruit Intake (daily)</label>
+          <div class="slider-val"><span id="fruit_val">1.0</span></div>
+          <input type="range" id="fruit" min="0" max="5" step="0.1" value="1"
+            oninput="document.getElementById('fruit_val').textContent=parseFloat(this.value).toFixed(1)"/>
+        </div>
+        <div class="slider-wrap">
+          <label>Green Veg (daily)</label>
+          <div class="slider-val"><span id="green_veg_val">1.0</span></div>
+          <input type="range" id="green_veg" min="0" max="5" step="0.1" value="1"
+            oninput="document.getElementById('green_veg_val').textContent=parseFloat(this.value).toFixed(1)"/>
+        </div>
+        <div class="slider-wrap">
+          <label>Fried Potato (daily)</label>
+          <div class="slider-val"><span id="fried_potato_val">0.5</span></div>
+          <input type="range" id="fried_potato" min="0" max="5" step="0.1" value="0.5"
+            oninput="document.getElementById('fried_potato_val').textContent=parseFloat(this.value).toFixed(1)"/>
+        </div>
+      </div>
+
+      <div class="slider-wrap" style="margin-top:14px;">
+        <label>Weekly Alcohol Consumption (units)</label>
+        <div class="slider-val"><span id="alcohol_val">2.0</span> <small>0 – 30 units/week</small></div>
+        <input type="range" id="alcohol" min="0" max="30" step="0.5" value="2"
+          oninput="document.getElementById('alcohol_val').textContent=parseFloat(this.value).toFixed(1)"/>
+      </div>
+
+      <div class="section-label">Medical History</div>
+
+      <div class="section-grid three">
+        <div class="field">
+          <label>Diabetes</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="setToggle('diabetes','0',this)">No</button>
+            <button class="toggle-btn" onclick="setToggle('diabetes','1',this)">Yes</button>
+          </div>
+          <input type="hidden" id="diabetes" value="0"/>
+        </div>
+        <div class="field">
+          <label>Depression</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="setToggle('depression','0',this)">No</button>
+            <button class="toggle-btn" onclick="setToggle('depression','1',this)">Yes</button>
+          </div>
+          <input type="hidden" id="depression" value="0"/>
+        </div>
+        <div class="field">
+          <label>Arthritis</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="setToggle('arthritis','0',this)">No</button>
+            <button class="toggle-btn" onclick="setToggle('arthritis','1',this)">Yes</button>
+          </div>
+          <input type="hidden" id="arthritis" value="0"/>
+        </div>
+      </div>
+
+      <div class="section-grid" style="margin-top:14px;">
+        <div class="field">
+          <label>Skin Cancer</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="setToggle('skin_cancer','0',this)">No</button>
+            <button class="toggle-btn" onclick="setToggle('skin_cancer','1',this)">Yes</button>
+          </div>
+          <input type="hidden" id="skin_cancer" value="0"/>
+        </div>
+        <div class="field">
+          <label>Other Cancer</label>
+          <div class="toggle-group">
+            <button class="toggle-btn active" onclick="setToggle('other_cancer','0',this)">No</button>
+            <button class="toggle-btn" onclick="setToggle('other_cancer','1',this)">Yes</button>
+          </div>
+          <input type="hidden" id="other_cancer" value="0"/>
+        </div>
+      </div>
+
+      <button class="predict-btn" id="predictBtn" onclick="predict()">
+        <div class="spinner"></div>
+        <span class="btn-text">⚡ Predict CVD Risk</span>
+      </button>
+    </div>
+
+    <div class="footer">
+      ⚠️ This tool is for educational purposes only and does not replace professional medical advice.
+    </div>
+  </div>
+
+  <!-- ── RIGHT: RESULTS ── -->
+  <div class="results-sticky">
+    <div class="card gauge-card" id="gaugeCard">
+      <div class="card-title">📊 Risk Assessment</div>
+      <div id="resultArea">
+        <div class="result-placeholder">
+          <div class="icon">🫀</div>
+          <p>Fill in the patient details<br/>and click <strong>Predict CVD Risk</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="factorsCard" style="display:none;">
+      <div class="card-title">⚖️ Key Risk Factors</div>
+      <div class="factor-list" id="factorList"></div>
+    </div>
+
+    <div class="card" id="adviceCard" style="display:none;">
+      <div class="card-title">💡 Clinical Recommendations</div>
+      <div class="advice-list" id="adviceList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function setToggle(fieldId, value, btn) {
+  document.getElementById(fieldId).value = value;
+  btn.closest('.toggle-group').querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function buildGauge(pct, color) {
+  const r = 80, cx = 100, cy = 100;
+  const circ = 2 * Math.PI * r;
+  const filled = (pct / 100) * circ;
+  return `
+    <svg class="gauge-svg" width="200" height="200" viewBox="0 0 200 200">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14"/>
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none"
+        stroke="${color}" stroke-width="14"
+        stroke-dasharray="${filled} ${circ}"
+        stroke-linecap="round"
+        style="transition: stroke-dasharray 0.8s ease;"/>
+    </svg>`;
+}
+
+async function predict() {
+  const btn = document.getElementById('predictBtn');
+  btn.classList.add('loading');
+
+  const payload = {
+    general_health: document.getElementById('general_health').value,
+    checkup: document.getElementById('checkup').value,
+    exercise: document.getElementById('exercise').value,
+    sex: document.getElementById('sex').value,
+    age_category: document.getElementById('age_category').value,
+    bmi: document.getElementById('bmi').value,
+    smoking: document.getElementById('smoking').value,
+    alcohol: document.getElementById('alcohol').value,
+    fruit: document.getElementById('fruit').value,
+    green_veg: document.getElementById('green_veg').value,
+    fried_potato: document.getElementById('fried_potato').value,
+    diabetes: document.getElementById('diabetes').value,
+    depression: document.getElementById('depression').value,
+    arthritis: document.getElementById('arthritis').value,
+    skin_cancer: document.getElementById('skin_cancer').value,
+    other_cancer: document.getElementById('other_cancer').value,
+  };
+
+  try {
+    const res = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.error);
+
+    // Gauge
+    const resultArea = document.getElementById('resultArea');
+    resultArea.innerHTML = `
+      <div class="animate-in">
+        <div class="gauge-wrap">
+          ${buildGauge(data.probability, data.risk_color)}
+          <div class="gauge-text">
+            <div class="gauge-pct" style="color:${data.risk_color}">${data.probability}%</div>
+            <div class="gauge-label">CVD Probability</div>
+          </div>
+        </div>
+        <div>
+          <span class="risk-badge" style="background:${data.risk_color}22; color:${data.risk_color}; border:1px solid ${data.risk_color}55;">
+            ${data.risk_level} Risk
+          </span>
+        </div>
+      </div>`;
+
+    // Factors
+    const factorsCard = document.getElementById('factorsCard');
+    const factorList = document.getElementById('factorList');
+    factorList.innerHTML = data.contributions.map(f => `
+      <div class="factor-item animate-in">
+        <span class="factor-name">${f.direction === 'risk' ? '🔴' : '🟢'} ${f.label}</span>
+        <span class="factor-chip ${f.direction === 'risk' ? 'chip-risk' : 'chip-protective'}">
+          ${f.direction === 'risk' ? '▲ Risk' : '▼ Protective'}
+        </span>
+      </div>`).join('');
+    factorsCard.style.display = 'block';
+
+    // Advice
+    const adviceCard = document.getElementById('adviceCard');
+    const adviceList = document.getElementById('adviceList');
+    adviceList.innerHTML = data.advice.map(a => `
+      <div class="advice-item animate-in">
+        <span class="advice-icon">•</span>
+        <span>${a}</span>
+      </div>`).join('');
+    adviceCard.style.display = 'block';
+
+  } catch (e) {
+    alert('Prediction error: ' + e.message);
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+</script>
+
+</body>
+</html>
