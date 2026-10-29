@@ -284,7 +284,7 @@ Processes an individual's health factors and returns probability, risk level, co
 
 ## 🔗 Live Demo Links & Repository
 
-- **GitHub Repository**: `https://github.com/<YOUR_USERNAME>/cardiovascular-disease-prediction` *(replace with your repo URL once pushed)*
+- **GitHub Repository**: `https://github.com/anshika190/cardiovascular-disease-prediction` *(replace with your repo URL once pushed)*
 - **CardioSense Live Predictor (Render)**: `https://<YOUR_APP_NAME>.onrender.com`
 - **Analytics Dashboard (Streamlit Cloud)**: `https://<YOUR_APP_NAME>.streamlit.app`
 
