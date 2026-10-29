@@ -3,13 +3,14 @@
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/framework-Flask%20%7C%20Streamlit-orange.svg)](https://flask.palletsprojects.com/)
 [![Machine Learning](https://img.shields.io/badge/ML-Scikit--Learn%20(MLP%20Neural%20Network)-green.svg)](https://scikit-learn.org/)
+[![Tests](https://img.shields.io/badge/tests-passing%20(6%2F6)-brightgreen.svg)]()
 [![Status](https://img.shields.io/badge/status-Production%20Ready-brightgreen.svg)]()
 
-A comprehensive, end-to-end Machine Learning healthcare platform for assessing cardiovascular disease (CVD) risk and performing interactive population health analytics.
+A comprehensive, end-to-end Machine Learning healthcare platform for assessing individual cardiovascular disease (CVD) risk and performing interactive population health analytics.
 
-The project incorporates two integrated components:
-1. **CardioSense Clinical Predictor (Flask Web Application)**: An interactive clinical risk prediction tool powered by a deep Multi-Layer Perceptron (MLP) Neural Network that estimates real-time CVD probabilities, visualizes risk factors, and provides actionable lifestyle recommendations.
-2. **Health Analytics & EDA Dashboard (Streamlit Application)**: An exploratory data analysis suite enabling health professionals to filter cohorts, evaluate BMI and chronic disease distributions, inspect correlation heatmaps, and export customized health datasets.
+The system incorporates two integrated applications:
+1. **CardioSense Clinical Predictor (Flask Web Application)**: An interactive clinical assessment portal powered by a Multi-Layer Perceptron (MLP) Artificial Neural Network that computes real-time CVD probabilities, classifies risk into 4 clinical tiers, displays contributing risk factors, and delivers personalized lifestyle recommendations.
+2. **Health Analytics & EDA Dashboard (Streamlit Application)**: An exploratory data science suite enabling health professionals to filter cohorts across age, sex, and 6 chronic co-morbidities, examine BMI distributions, inspect correlation heatmaps, and export customized cohort datasets.
 
 ---
 
@@ -21,8 +22,11 @@ The project incorporates two integrated components:
 - [Machine Learning Model Details](#-machine-learning-model-details)
 - [Installation & Setup Guide](#-installation--setup-guide)
 - [How to Run Locally](#-how-to-run-locally)
+- [Running Automated Tests](#-running-automated-tests)
 - [API Documentation](#-api-documentation)
 - [Deployment Guide](#-deployment-guide)
+- [Live Demo Links & Repository](#-live-demo-links--repository)
+- [Limitations & Academic Disclaimer](#-limitations--academic-disclaimer)
 - [College Deliverables & Submission Info](#-college-deliverables--submission-info)
 
 ---
@@ -50,6 +54,7 @@ This project analyzes patient lifestyle factors (dietary habits, exercise, smoki
   - 🔴 **Very High Risk** (≥75%)
 - **Feature Contribution Breakdown**: Visual indicator chips detailing which attributes contributed to increased risk or served as protective factors.
 - **Tailored Medical & Lifestyle Advice**: Clinical guidance tailored specifically to the user's predicted risk tier.
+- **API Health Check**: Dedicated `/health` monitoring route.
 
 ### 2. Population Health Analytics Dashboard (`dashboard.py` - Streamlit)
 - **Multi-Factor Cohort Slicing**: Dynamic sidebar filters for Age Category, Sex, General Health, and 6 chronic co-morbidities.
@@ -64,13 +69,15 @@ This project analyzes patient lifestyle factors (dietary habits, exercise, smoki
 
 | Layer | Technologies |
 |---|---|
-| **Programming Language** | Python 3.10+ |
+| **Programming Language** | Python 3.10+ (tested on Python 3.11, 3.12, 3.14) |
 | **Web Application Backend** | Flask 3.x, Jinja2, Werkzeug, Gunicorn |
 | **Data Analytics Dashboard** | Streamlit |
 | **Machine Learning & Modeling** | Scikit-Learn (`MLPClassifier`, `StandardScaler`, `LabelEncoder`) |
 | **Data Processing & Math** | NumPy, Pandas |
 | **Data Visualization** | Matplotlib, Seaborn |
 | **Frontend UI / UX** | Semantic HTML5, Modern CSS3 (Glassmorphism / Dark Mode theme), Vanilla JS (Fetch API, SVG Gauge) |
+| **Testing** | Python `unittest` |
+| **Deployment & CI** | Procfile, `render.yaml` (Render Blueprint), Streamlit Cloud |
 | **Dataset Source** | CDC Behavioral Risk Factor Surveillance System (BRFSS) |
 
 ---
@@ -83,6 +90,8 @@ cardiovascular-disease-prediction/
 ├── dashboard.py               # Streamlit interactive exploratory dashboard
 ├── train_model.py             # Machine learning data generation & MLP training script
 ├── requirements.txt           # Unified project Python dependencies
+├── Procfile                   # Cloud process manager configuration (Gunicorn)
+├── render.yaml                # Render Blueprint deployment definition
 ├── run_app.bat                # Windows one-click launcher for Flask web app
 ├── run_dashboard.bat          # Windows one-click launcher for Streamlit dashboard
 ├── .gitignore                 # Standard Git exclusion file
@@ -96,6 +105,9 @@ cardiovascular-disease-prediction/
 │
 ├── templates/                 # Frontend templates
 │   └── index.html             # CardioSense dark-themed responsive user interface
+│
+├── tests/                     # Automated test suite
+│   └── test_app.py            # Unit & integration tests for API, ML inference, and data
 │
 ├── data/                      # Health data store
 │   └── health_dataset.csv     # BRFSS epidemiological dataset for Streamlit analytics
@@ -126,7 +138,7 @@ cardiovascular-disease-prediction/
 
 ### 1. Prerequisites
 - Python 3.10, 3.11, 3.12, 3.13, or 3.14 installed on your system.
-- Git (optional, for cloning).
+- Git.
 
 ### 2. Install Required Dependencies
 Open your terminal or PowerShell in the project root directory and run:
@@ -166,15 +178,40 @@ http://localhost:8501
 ```
 
 #### 3. (Optional) Retrain the Machine Learning Model
-If you wish to re-train the neural network from scratch:
 ```bash
 python train_model.py
 ```
-This will regenerate `model/mlp_model.pkl`, `model/scaler.pkl`, and `model/encoders.pkl` and print the training evaluation metrics.
+This regenerates `model/mlp_model.pkl`, `model/scaler.pkl`, and `model/encoders.pkl` and outputs training evaluation metrics.
+
+---
+
+## 🧪 Running Automated Tests
+
+Run the comprehensive unit test suite:
+```bash
+python -m unittest discover tests
+```
+All 6 test cases verify:
+- Flask homepage rendering & status
+- `/health` status and model availability
+- Low-risk patient prediction workflow & recommendations
+- High-risk patient prediction workflow & alert thresholds
+- Malformed request / missing parameter handling (HTTP 400)
+- Epidemiological dataset schema integrity
 
 ---
 
 ## 🔌 API Documentation
+
+### `GET /health`
+Returns system status and model readiness.
+```json
+{
+  "status": "healthy",
+  "service": "CardioSense Cardiovascular Risk Predictor API",
+  "model_loaded": true
+}
+```
 
 ### `POST /predict`
 Processes an individual's health factors and returns probability, risk level, contributing factors, and clinical recommendations.
@@ -228,15 +265,15 @@ Processes an individual's health factors and returns probability, risk level, co
 
 ## 🌐 Deployment Guide
 
-### Deploying CardioSense to Render.com (Recommended Free Hosting)
+### Deploying CardioSense to Render.com (Free Tier)
 1. Push this project repository to your GitHub account.
 2. Go to [Render.com](https://render.com/) and click **New + > Web Service**.
-3. Connect your GitHub repository.
-4. Set the following settings:
+3. Select your GitHub repository.
+4. Render automatically detects [`render.yaml`](render.yaml) or set:
    - **Environment**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `gunicorn app:app`
-5. Click **Create Web Service**. Once built, Render will provide a public live URL (e.g., `https://cardiosense-cvd.onrender.com`).
+5. Click **Create Web Service**. Your public live URL will be provisioned (e.g., `https://cardiosense-cvd.onrender.com`).
 
 ### Deploying the Analytics Dashboard to Streamlit Community Cloud
 1. Push this repository to GitHub.
@@ -245,14 +282,30 @@ Processes an individual's health factors and returns probability, risk level, co
 
 ---
 
+## 🔗 Live Demo Links & Repository
+
+- **GitHub Repository**: `https://github.com/<YOUR_USERNAME>/cardiovascular-disease-prediction` *(replace with your repo URL once pushed)*
+- **CardioSense Live Predictor (Render)**: `https://<YOUR_APP_NAME>.onrender.com`
+- **Analytics Dashboard (Streamlit Cloud)**: `https://<YOUR_APP_NAME>.streamlit.app`
+
+---
+
+## ⚠️ Limitations & Academic Disclaimer
+
+1. **Academic Demonstration**: This application and its machine learning model were created strictly for academic research and college project demonstration.
+2. **Not a Clinical Device**: Model outputs, risk tiers, and lifestyle advice are statistical estimations derived from survey data. They do not constitute formal medical diagnosis, clinical prognosis, or personalized doctor advice.
+3. **Data Scope**: The model is trained on survey-reported behavioral and health indicators from the CDC BRFSS dataset and does not incorporate clinical biometric biomarkers (such as troponin levels, ECG, coronary angiograms, or lipid panels).
+4. **Emergency Health Concerns**: Anyone experiencing chest discomfort, shortness of breath, radiating pain, or severe cardiac symptoms should seek immediate emergency medical evaluation from qualified healthcare professionals.
+
+---
+
 ## 🎓 College Deliverables & Submission Info
 
 - **Project Title**: Cardiovascular Disease Risk Prediction and Health Analytics System
 - **Domain**: Machine Learning, Healthcare Informatics, Data Analytics & Full-Stack Web Development
-- **Student Documentation**:
+- **Student Documentation Included**:
   - Project Presentation: [`docs/CardiovascularDiseasePrediction_Presentation.pptx`](docs/CardiovascularDiseasePrediction_Presentation.pptx)
   - Project Synopsis: [`docs/Project_Synopsis.docx`](docs/Project_Synopsis.docx)
   - Final Comprehensive Report: [`docs/Final_Project_Report.docx`](docs/Final_Project_Report.docx) & [`docs/Project_Report.pdf`](docs/Project_Report.pdf)
   - Research Notebook: [`notebooks/Cardiovascular_Disease_Prediction.ipynb`](notebooks/Cardiovascular_Disease_Prediction.ipynb)
-- **Live Demo Instructions**: Provide teacher with the running localhost URLs or the deployed cloud link along with the presentation slides.
-
+- **Live Demo Instructions**: Provide your teacher with the live deployment links or the localhost URLs alongside the presentation slides.
